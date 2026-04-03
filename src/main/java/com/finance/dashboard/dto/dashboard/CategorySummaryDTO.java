@@ -1,14 +1,12 @@
 package com.finance.dashboard.dto.dashboard;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
 import java.math.BigDecimal;
 
 @Data
-@AllArgsConstructor
+@Builder
 public class CategorySummaryDTO {
-
     private String category;
-    private BigDecimal amount;
+    private BigDecimal totalAmount; // renamed for consistency
 }

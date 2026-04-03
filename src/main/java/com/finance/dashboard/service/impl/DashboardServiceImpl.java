@@ -10,11 +10,11 @@ import com.finance.dashboard.repository.UserRepository;
 import com.finance.dashboard.service.DashboardService;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,7 +26,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final FinancialRecordRepository recordRepository;
     private final UserRepository userRepository;
 
-    // ✅ Get logged-in user
+    // Get currently logged-in user
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication()
@@ -36,12 +36,10 @@ public class DashboardServiceImpl implements DashboardService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    // 🔹 1. Summary
+    // 1️⃣ Dashboard Summary
     @Override
     public DashboardSummaryDTO getSummary() {
-
-        List<FinancialRecord> records =
-                recordRepository.findByUserId(getCurrentUser().getId());
+        List<FinancialRecord> records = recordRepository.findByUserId(getCurrentUser().getId());
 
         BigDecimal totalIncome = records.stream()
                 .filter(r -> r.getType() == RecordType.INCOME)
@@ -60,58 +58,55 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
 
-    // 🔹 2. Category Summary
+    // 2️⃣ Category Summary
     @Override
     public List<CategorySummaryDTO> getCategorySummary() {
-
-        List<FinancialRecord> records =
-                recordRepository.findByUserId(getCurrentUser().getId());
+        List<FinancialRecord> records = recordRepository.findByUserId(getCurrentUser().getId());
 
         Map<String, BigDecimal> categoryMap = records.stream()
                 .filter(r -> r.getType() == RecordType.EXPENSE)
                 .collect(Collectors.groupingBy(
                         FinancialRecord::getCategory,
-                        Collectors.mapping(
-                                FinancialRecord::getAmount,
-                                Collectors.reducing(BigDecimal.ZERO, BigDecimal::add)
-                        )
+                        Collectors.mapping(FinancialRecord::getAmount,
+                                Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
                 ));
 
         return categoryMap.entrySet().stream()
-                .map(entry -> new CategorySummaryDTO(entry.getKey(), entry.getValue()))
+                .map(entry -> CategorySummaryDTO.builder()
+                        .category(entry.getKey())
+                        .totalAmount(entry.getValue())
+                        .build())
                 .toList();
     }
 
-    // 🔹 3. Monthly Trends
+    // 3️⃣ Monthly Trends
     @Override
     public List<MonthlyTrendDTO> getMonthlyTrends() {
+        List<FinancialRecord> records = recordRepository.findByUserId(getCurrentUser().getId());
 
-        List<FinancialRecord> records =
-                recordRepository.findByUserId(getCurrentUser().getId());
+        Map<Month, List<FinancialRecord>> grouped = records.stream()
+                .collect(Collectors.groupingBy(r -> r.getDate().getMonth()));
 
-        Map<String, List<FinancialRecord>> grouped =
-                records.stream().collect(Collectors.groupingBy(
-                        r -> r.getDate().getMonth()
-                                .getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
-                ));
+        // Sort months in calendar order
+        return grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    BigDecimal income = entry.getValue().stream()
+                            .filter(r -> r.getType() == RecordType.INCOME)
+                            .map(FinancialRecord::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<MonthlyTrendDTO> result = new ArrayList<>();
+                    BigDecimal expense = entry.getValue().stream()
+                            .filter(r -> r.getType() == RecordType.EXPENSE)
+                            .map(FinancialRecord::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        for (Map.Entry<String, List<FinancialRecord>> entry : grouped.entrySet()) {
-
-            BigDecimal income = entry.getValue().stream()
-                    .filter(r -> r.getType() == RecordType.INCOME)
-                    .map(FinancialRecord::getAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            BigDecimal expense = entry.getValue().stream()
-                    .filter(r -> r.getType() == RecordType.EXPENSE)
-                    .map(FinancialRecord::getAmount)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            result.add(new MonthlyTrendDTO(entry.getKey(), income, expense));
-        }
-
-        return result;
+                    return MonthlyTrendDTO.builder()
+                            .month(entry.getKey().getDisplayName(TextStyle.SHORT, Locale.ENGLISH))
+                            .income(income)
+                            .expense(expense)
+                            .build();
+                })
+                .toList();
     }
 }

@@ -28,17 +28,24 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             
-            // Stateless session (IMPORTANT for JWT)
+            // Stateless session (important for JWT)
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
             .authorizeHttpRequests(auth -> auth
+                // Allow auth endpoints
                 .requestMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated()
+                // Allow H2 console
+                .requestMatchers("/h2-console/**").permitAll()
+                // Temporarily allow all other endpoints for testing
+                .anyRequest().permitAll()
             )
 
-            // Add JWT filter before Spring's auth filter
+            // Disable frame options for H2 console
+            .headers(headers -> headers.frameOptions().disable())
+
+            // Add JWT filter (it won't block anything now)
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
