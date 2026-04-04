@@ -26,7 +26,7 @@ public class DashboardServiceImpl implements DashboardService {
     private final FinancialRecordRepository recordRepository;
     private final UserRepository userRepository;
 
-    // Get currently logged-in user
+
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication()
@@ -36,7 +36,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    // 1️⃣ Dashboard Summary
     @Override
     public DashboardSummaryDTO getSummary() {
         List<FinancialRecord> records = recordRepository.findByUserId(getCurrentUser().getId());
@@ -58,7 +57,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
 
-    // 2️⃣ Category Summary
     @Override
     public List<CategorySummaryDTO> getCategorySummary() {
         List<FinancialRecord> records = recordRepository.findByUserId(getCurrentUser().getId());
@@ -79,7 +77,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .toList();
     }
 
-    // 3️⃣ Monthly Trends
     @Override
     public List<MonthlyTrendDTO> getMonthlyTrends() {
         List<FinancialRecord> records = recordRepository.findByUserId(getCurrentUser().getId());
@@ -87,7 +84,6 @@ public class DashboardServiceImpl implements DashboardService {
         Map<Month, List<FinancialRecord>> grouped = records.stream()
                 .collect(Collectors.groupingBy(r -> r.getDate().getMonth()));
 
-        // Sort months in calendar order
         return grouped.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {

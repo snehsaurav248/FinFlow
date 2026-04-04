@@ -27,15 +27,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
 
-        // ✅ Normalize email (important for duplicates)
+        
         String email = request.getEmail().toLowerCase().trim();
 
-        // ✅ Check if user already exists
+        
         if (userRepository.findByEmail(email).isPresent()) {
             throw new BadRequestException("User already exists with this email");
         }
 
-        // ✅ Create user
         User user = User.builder()
                 .name(request.getName().trim())
                 .email(email)
@@ -45,7 +44,6 @@ public class AuthServiceImpl implements AuthService {
 
         userRepository.save(user);
 
-        // ✅ Generate token
         String token = jwtUtil.generateToken(user.getEmail());
 
         return new AuthResponse(token);
@@ -56,21 +54,17 @@ public class AuthServiceImpl implements AuthService {
 
         String email = request.getEmail().toLowerCase().trim();
 
-        // ✅ Find user
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // ✅ Check if user is active (important!)
         if (!user.isActive()) {
             throw new BadRequestException("User account is deactivated");
         }
 
-        // ✅ Validate password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadRequestException("Invalid credentials");
         }
 
-        // ✅ Generate token
         String token = jwtUtil.generateToken(user.getEmail());
 
         return new AuthResponse(token);

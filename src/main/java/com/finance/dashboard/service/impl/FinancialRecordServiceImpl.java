@@ -22,7 +22,6 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     private final FinancialRecordRepository recordRepository;
     private final UserRepository userRepository;
 
-    // ✅ Get current logged-in user
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext()
                 .getAuthentication()
@@ -70,7 +69,6 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
         FinancialRecord record = recordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
 
-        // 🔐 Ensure user owns the record
         if (!record.getUser().getId().equals(user.getId())) {
             throw new ResourceNotFoundException("Record not found");
         }
@@ -84,7 +82,6 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
         FinancialRecord record = recordRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
 
-        // 🔐 Ownership check
         if (!record.getUser().getId().equals(getCurrentUser().getId())) {
             throw new ResourceNotFoundException("Record not found");
         }
@@ -113,7 +110,7 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
         recordRepository.delete(record);
     }
 
-    // 🔁 Mapper method
+
     private FinancialRecordResponseDTO mapToResponse(FinancialRecord record) {
         return FinancialRecordResponseDTO.builder()
                 .id(record.getId())

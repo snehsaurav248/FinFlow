@@ -9,5 +9,5 @@ public class UserRequestDTO {
     private String name;
     private String email;
     private String password;
-    private RoleType role;   // ADMIN, ANALYST, VIEWER
+    private RoleType role;  
 }

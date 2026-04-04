@@ -13,7 +13,6 @@ public class JwtUtil {
     private final String SECRET = "mysecretkeymysecretkeymysecretkey123"; // must be long
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
-    // Generate token
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
@@ -23,7 +22,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Extract email
     public String extractEmail(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -33,12 +31,10 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    // Validate token
     public boolean validateToken(String token, String email) {
         return extractEmail(token).equals(email) && !isTokenExpired(token);
     }
 
-    // Check expiry
     private boolean isTokenExpired(String token) {
         Date expiration = Jwts.parserBuilder()
                 .setSigningKey(key)

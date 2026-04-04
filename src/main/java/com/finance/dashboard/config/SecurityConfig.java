@@ -20,32 +20,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter;
+    private final JwtFilter jwtFilter; 
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
-            
-            // Stateless session (important for JWT)
-            .sessionManagement(session -> 
+            .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-
             .authorizeHttpRequests(auth -> auth
-                // Allow auth endpoints
                 .requestMatchers("/api/auth/**").permitAll()
-                // Allow H2 console
-                .requestMatchers("/h2-console/**").permitAll()
-                // Temporarily allow all other endpoints for testing
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             )
-
-            // Disable frame options for H2 console
-            .headers(headers -> headers.frameOptions().disable())
-
-            // Add JWT filter (it won't block anything now)
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

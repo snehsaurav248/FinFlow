@@ -8,5 +8,5 @@ import java.math.BigDecimal;
 @Builder
 public class CategorySummaryDTO {
     private String category;
-    private BigDecimal totalAmount; // renamed for consistency
+    private BigDecimal totalAmount; 
 }

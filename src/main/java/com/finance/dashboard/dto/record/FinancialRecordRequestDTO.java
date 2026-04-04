@@ -15,7 +15,7 @@ public class FinancialRecordRequestDTO {
     private BigDecimal amount;
 
     @NotNull(message = "Type is required")
-    private RecordType type; // INCOME / EXPENSE
+    private RecordType type;
 
     @NotBlank(message = "Category is required")
     private String category;
