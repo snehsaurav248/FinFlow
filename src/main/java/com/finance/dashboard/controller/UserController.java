@@ -4,6 +4,8 @@ import com.finance.dashboard.dto.user.UserRequestDTO;
 import com.finance.dashboard.dto.user.UserResponseDTO;
 import com.finance.dashboard.service.UserService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,13 +39,14 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public UserResponseDTO updateUser(@PathVariable Long id,
-                                      @RequestBody UserRequestDTO dto) {
+            @RequestBody UserRequestDTO dto) {
         return userService.updateUser(id, dto);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
+        return ResponseEntity.ok("User deleted successfully");
     }
 }
